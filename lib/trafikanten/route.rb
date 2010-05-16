@@ -1,6 +1,10 @@
 require 'pp'
 
 module Trafikanten
+  class Error < StandardError;end
+  class BadRequest < Error;end
+  class APIError < Error;end
+  
   class Route
     attr_accessor :trip
     
@@ -8,7 +12,7 @@ module Trafikanten
       date  = time.strftime "%d.%m.%Y"
       clock = time.strftime "%H.%M"
       url = "http://m.trafikanten.no/BetRes.asp?fra=#{from}%3A&DepType=1&date=#{date}&til=#{to}%3A&ArrType=1&transport=2,%207,%205,%208,%201,%206,%204&MaxRadius=700&type=1&tid=#{clock}"
-      @trip = parse(Trafikanten::Utils.get_unfucked(url))
+      @trip = parse(Trafikanten::Utils.fetch(url))
     end
     
     private
@@ -18,19 +22,35 @@ module Trafikanten
     WAIT    = /^Vent  (\d+) minutt/
     TRAIN   = /^Tog (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
     BUS     = /^Buss (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
-    BOAT    = /^B.t (.+).+Avg:(.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
-    SUBWAY  = /^T-bane (.+).+Avg:(.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
+    BOAT    = /^B.t (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
+    SUBWAY  = /^T-bane (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
+    TRAM    = /^Sporvogn (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
     
+    # Wrap the actual parsing and check for errors if something goes wrong
+    # Saves us the trouble of checking all potential errors on every request
     def parse(doc)
-      
-      if doc =~ /Ingen forbindelse funnet eller ingen stoppesteder funnet/
-        return {}
+      begin
+        do_parse(doc)
+      rescue => e
+        if doc =~ /Ingen forbindelse funnet eller ingen stoppesteder funnet/
+          return {}
+        end
+
+        if doc =~ /Microsoft VBScript runtime/
+          raise BadRequest
+        end
+
+        if doc =~ /Trafikanten - Feilmelding/
+          doc =~ /<p>(.+)<\/p>/
+          raise Error.new($1)
+        end
+
+        # Oops.
+        raise e
       end
-      
-      if doc =~ /Dato utenfor gyldig intervall/
-        raise "Bad"
-      end
-      
+    end
+    
+    def do_parse(doc)
       trip = {}
       doc = Nokogiri::HTML.parse(doc)
       
@@ -72,36 +92,29 @@ module Trafikanten
       when WAIT
         parsed[:type]     = :wait
         parsed[:duration] = $1.to_i
+        return parsed
       when WALK
         parsed[:type]     = :walk
         parsed[:duration] = $3.to_i
         parsed[:depart]   = $1
         parsed[:arrive]   = $2
+        return parsed
       when TRAIN
         parsed[:type]     = :train
-        parsed[:line]     = $1.strip
-        parsed[:duration] = Trafikanten::Utils.duration($3, $5)
-        parsed[:depart]   = $2
-        parsed[:arrive]   = $4
       when BUS
         parsed[:type]     = :bus
-        parsed[:line]     = $1.strip
-        parsed[:duration] = Trafikanten::Utils.duration($3, $5)
-        parsed[:depart]   = $2
-        parsed[:arrive]   = $4  
       when BOAT
         parsed[:type]     = :boat
-        parsed[:line]     = $1.strip
-        parsed[:duration] = Trafikanten::Utils.duration($3, $5)
-        parsed[:depart]   = $2
-        parsed[:arrive]   = $4
       when SUBWAY
         parsed[:type]     = :subway
-        parsed[:line]     = $1.strip
-        parsed[:duration] = Trafikanten::Utils.duration($3, $5)
-        parsed[:depart]   = $2
-        parsed[:arrive]   = $4
+      when TRAM
+        parsed[:type]     = :tram
       end
+      # Common parsing for TRAIN / BUS / BOAT / SUBWAY / TRAM
+      parsed[:line]     = $1.strip
+      parsed[:duration] = Trafikanten::Utils.duration($3, $5)
+      parsed[:depart]   = $2
+      parsed[:arrive]   = $4
       parsed
     end
     

@@ -3,12 +3,15 @@ class RoutesController < ApplicationController
     begin
       route = Trafikanten::Route.new(params[:from_id], params[:to_id], get_time)
     rescue => e
-      raise e
-      head :bad_request and return
+      if e.kind_of? Trafikanten::Error
+        render :text => e.message, :status => :bad_request and return
+      else
+        raise e
+      end
     end
     
     if route.trip.empty?
-      head :not_found and return
+      render :text => "No available routes found", :status => :not_found and return
     end
     
     render :json => route.trip.to_json

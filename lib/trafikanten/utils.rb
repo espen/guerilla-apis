@@ -7,7 +7,7 @@ module Trafikanten
 
     # Helper for retrieving URLs and converting them to UTF-8
     # Also a nice place to mock for testing
-    def self.get_unfucked(url)
+    def self.fetch(url)
       Rails.logger.debug "Trafikanten API: Hitting #{url}"
       Iconv.new('UTF-8', 'LATIN1').iconv(open(url).read)
     end
