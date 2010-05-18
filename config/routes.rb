@@ -1,27 +1,21 @@
 Trafikanten::Application.routes.draw do |map|
 
+  # Ze APIs
   namespace :api do
     
     # API version 1
     namespace :v1 do
-      
-      # Stations
-      namespace :stations do
-        match '/:name', :to => 'stations#show'
-        match '/search/:name', :to => 'stations#search'
-      end
-      
+    
       # Routes
       namespace :routes do
-        match '/:from_id/:to_id(/:date/:time)', :to => 'routes#find'
+        match '/:from_id/:to_id(/:date/:time)', :to => 'routes#find',
+          :from_id => /\d+/,
+          :to_id => /\d+/,
+          :date => /\d{4}-\d{2}-\d{2}/,
+          :time => /\d{2}:\d{2}/
       end
+      
     end
     
   end
-
-  # See how all your routes lay out with "rake routes"
-
-  # This is a legacy wild controller route that's not recommended for RESTful applications.
-  # Note: This route will make all actions in every controller accessible via GET requests.
-  # match ':controller(/:action(/:id(.:format)))'
 end
