@@ -16,18 +16,28 @@ class RoutesController < ApplicationController
       render :text => "No available routes found", :status => :not_found and return
     end
     
+    if time_requested?
+      # Cache forever
+      expires_in 10.years, 'max-stale' => 10.years.to_i, :public => true
+    else
+      # Cache till the first departure
+      max_age = (route.trip[:steps].first[:depart][:time] - Time.zone.now).to_i
+      expires_in max_age, 'max-stale' => max_age, :public => true
+    end
     
-    max_age = (route.trip[:steps].first[:depart][:time] - Time.zone.now).to_i
-    expires_in max_age, 'max-stale' => max_age, :public => true
     render :json => route.trip.to_json
   end
   
   private
   def get_time
-    if params[:date] && params[:time]
+    if time_requested?
       Time.zone.parse params[:date] + ' ' + params[:time]
     else
       Time.zone.now
     end
+  end
+  
+  def time_requested?
+    !params[:date].blank? && !params[:time].blank?
   end
 end
