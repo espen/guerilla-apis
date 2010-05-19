@@ -22,6 +22,7 @@ class RoutesController < ApplicationController
     else
       # Cache till the first departure
       max_age = (route.trip[:steps].first[:depart][:time] - Time.zone.now).to_i
+      max_age = max_age > 0 ? max_age : 0
       expires_in max_age, 'max-stale' => max_age, :public => true
     end
     
