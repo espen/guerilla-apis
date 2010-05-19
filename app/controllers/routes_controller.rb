@@ -1,4 +1,5 @@
 class RoutesController < ApplicationController
+  # TODO: Cache this hit and expire it at the time of departure in the first step!
   def find
     begin
       route = Trafikanten::Route.new(params[:from_id], params[:to_id], get_time)
@@ -14,6 +15,9 @@ class RoutesController < ApplicationController
     if route.trip.empty?
       render :text => "No available routes found", :status => :not_found and return
     end
+    
+    max_age = (Time.parse(trip[:steps].first[:depart][:time]) - Time.zone.now).to_i
+    response.headers['Cache-Control'] = "public, max-age=#{max_age}"
     
     render :json => route.trip.to_json
   end
