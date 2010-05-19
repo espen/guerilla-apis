@@ -18,8 +18,7 @@ class RoutesController < ApplicationController
     
     
     max_age = (route.trip[:steps].first[:depart][:time] - Time.zone.now).to_i
-    response.headers['Cache-Control'] = "public, max-age=#{max_age}"
-    
+    expires_in max_age
     render :json => route.trip.to_json
   end
   
