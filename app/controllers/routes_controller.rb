@@ -21,9 +21,9 @@ class RoutesController < ApplicationController
   private
   def get_time
     if params[:date] && params[:time]
-      Time.parse params[:date] + ' ' + params[:time]
+      Time.zone.parse params[:date] + ' ' + params[:time]
     else
-      Time.now
+      Time.zone.now
     end
   end
 end
