@@ -16,7 +16,7 @@ class RoutesController < ApplicationController
       render :text => "No available routes found", :status => :not_found and return
     end
     
-    max_age = (Time.parse(trip[:steps].first[:depart][:time]) - Time.zone.now).to_i
+    max_age = (Time.parse(route.trip[:steps].first[:depart][:time]) - Time.zone.now).to_i
     response.headers['Cache-Control'] = "public, max-age=#{max_age}"
     
     render :json => route.trip.to_json
