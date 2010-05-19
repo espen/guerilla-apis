@@ -25,9 +25,10 @@ class RoutesController < ApplicationController
       expires_in max_age, 'max-stale' => max_age, :public => true
     end
     
-    route.trip[:source] = 'trafikanten.no'
-    
-    render :json => route.trip.to_json
+    result = {}
+    result[:source] = 'trafikanten.no'
+    result[:route] = route.trip
+    render :json => result.to_json
   end
   
   private
