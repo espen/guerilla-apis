@@ -1,43 +1,47 @@
-require 'pp'
+# encoding: utf-8
 
 module Trafikanten
   class Error < StandardError;end
   class BadRequest < Error;end
-  class APIError < Error;end
   
   class Route
     attr_accessor :trip
-    
-    def initialize(from, to, time = Time.now)
-      date  = time.strftime "%d.%m.%Y"
-      clock = time.strftime "%H.%M"
-      url = "http://m.trafikanten.no/BetRes.asp?fra=#{from}%3A&DepType=1&date=#{date}&til=#{to}%3A&ArrType=1&transport=2,%207,%205,%208,%201,%206,%204&MaxRadius=700&type=1&tid=#{clock}"
-      @trip = parse(Trafikanten::Utils.fetch(url))
-    end
-    
-    private
-    
+    BASE_URL = 'http://m.trafikanten.no/BetRes.asp?'
+
     # Regexes for matching steps in the HTML
-    WALK    = /^G.+fra (.+) til (.+) ca. (\d) minutt/
-    WAIT    = /^Vent  (\d+) minutt/
-    TRAIN   = /^Tog (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
-    BUS     = /^Buss (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
-    BOAT    = /^B.t (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
-    SUBWAY  = /^T-bane (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
-    TRAM    = /^Sporvogn (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/
+    WALK    = /Gå\s+fra (.+) til (.+) ca. (\d) minutt/u
+    WAIT    = /Vent\s+(\d+) minutt/
+    TRANSPORT = /(\S+) (.+).+Avg: (.+) (\d{2}.\d{2}).+Ank:(.+) (\d{2}.\d{2})/u
     
-    # Wrap the actual parsing and check for errors if something goes wrong
-    # Saves us the trouble of checking all potential errors on every request
-    def parse(doc)
+    TYPE_MAP = {
+      'Tog' => :train,
+      'T-bane' => :subway,
+      'Sporvogn' => :tram,
+      'Båt' => :boat,
+      'Buss' => :bus
+    }
+    
+    def initialize(from_id, to_id, time = Time.now)
+      @from = Station.new({:id => from_id.to_s})      
+      @to = Station.new({:id => to_id.to_s})
+
+      @time = time
+      @trip = {}
+    end
+
+    def parse
+      # This is pretty brittle error-checking...
       begin
-        do_parse(doc)
-      rescue => e
-        if doc =~ /Ingen forbindelse funnet eller ingen stoppesteder funnet/
-          return {}
-        end
+        doc = Trafikanten::Utils.fetch(BASE_URL + query_string)
 
         if doc =~ /Microsoft VBScript runtime/
           raise BadRequest
+        end
+
+        @trip = do_parse(doc)
+      rescue => e
+        if doc =~ /Ingen forbindelse funnet eller ingen stoppesteder funnet/
+          return {}
         end
 
         if doc =~ /Trafikanten - Feilmelding/
@@ -50,13 +54,15 @@ module Trafikanten
       end
     end
     
+    private
+    
     def do_parse(doc)
       trip = {}
       doc = Nokogiri::HTML.parse(doc)
       
       trip[:steps] = doc.css('p')[1..-1].inject([]) do |ary, step|
-        # Clean the text, mostly for better debug output
-        step = Trafikanten::Utils.clean(step.text)
+        # Clean the text
+        step = step.text.strip.gsub(/\s/, ' ')
         
         # Fix for broken formatting
         # All steps but this one is in its own paragraph-tag
@@ -74,15 +80,6 @@ module Trafikanten
         i += step[:duration] if step[:duration]
       end
       
-      # Arrive is the station arriving at in the last step
-      trip[:arrive] = trip[:steps].last[:arrive]
-      
-      # Depart is the first station we depart from
-      trip[:steps].each do |step|
-        if step[:depart]
-          trip[:depart] = step[:depart] and break
-        end
-      end
       trip
     end
     
@@ -92,31 +89,58 @@ module Trafikanten
       when WAIT
         parsed[:type]     = :wait
         parsed[:duration] = $1.to_i
-        return parsed
       when WALK
         parsed[:type]     = :walk
         parsed[:duration] = $3.to_i
-        parsed[:depart]   = $1
-        parsed[:arrive]   = $2
-        return parsed
-      when TRAIN
-        parsed[:type]     = :train
-      when BUS
-        parsed[:type]     = :bus
-      when BOAT
-        parsed[:type]     = :boat
-      when SUBWAY
-        parsed[:type]     = :subway
-      when TRAM
-        parsed[:type]     = :tram
+        parsed[:depart]   = {
+          :station => $1
+        }
+        parsed[:arrive]   = {
+          :station => $2
+        }
+      when TRANSPORT
+        parsed[:type]     = TYPE_MAP[$1]
+        parsed[:line]     = $2.strip
+        parsed[:duration] = duration($4, $6)
+        parsed[:depart]   = {
+          :station => $3,
+          :time => timestr_to_time($4, $4)
+        }
+        parsed[:arrive]   = {
+          :station => $5,
+          :time => timestr_to_time($4, $6)
+        }
       end
-      # Common parsing for TRAIN / BUS / BOAT / SUBWAY / TRAM
-      parsed[:line]     = $1.strip
-      parsed[:duration] = Trafikanten::Utils.duration($3, $5)
-      parsed[:depart]   = $2
-      parsed[:arrive]   = $4
       parsed
     end
     
+    private
+    def query_string
+      "fra=#{@from.id}%3A&DepType=#{@from.type}&date=#{@time.strftime("%d.%m.%Y")}&til=#{@to.id}%3A&arrType=#{@to.type}&Transport=2,%207,%205,%208,%201,%206,%204&MaxRadius=700&type=1&tid=#{@time.strftime("%H.%M")}"
+    end
+    
+    # Accepts two HH.MM and will calculate and return the difference in minutes based on the @time date
+    def duration(from, to)
+      from  = from.gsub('.', ':')
+      to    = to.gsub('.', ':')
+      
+      from_time = Time.parse(@time.strftime('%Y-%m-%d') + ' ' + from)
+      to_time   = Time.parse(@time.strftime('%Y-%m-%d') + ' ' + to)
+      
+      if(to.to_f < from.to_f)
+        to_time = to_time + (60 * 60 * 24)
+      end
+      
+      ((to_time - from_time) / 60).to_i
+    end
+    
+    def timestr_to_time(from_timestr, to_timestr)
+      time = Time.parse(@time.strftime('%Y-%m-%d') + ' ' + to_timestr.gsub('.', ':'))
+      
+      if(to_timestr.to_f < from_timestr.to_f)
+        time = time + (60 * 60 * 24)
+      end
+      time
+    end
   end
 end

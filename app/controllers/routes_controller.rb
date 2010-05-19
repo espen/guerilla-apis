@@ -2,6 +2,7 @@ class RoutesController < ApplicationController
   def find
     begin
       route = Trafikanten::Route.new(params[:from_id], params[:to_id], get_time)
+      route.parse
     rescue => e
       if e.kind_of? Trafikanten::Error
         render :text => e.message, :status => :bad_request and return
