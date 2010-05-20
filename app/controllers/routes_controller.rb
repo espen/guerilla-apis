@@ -1,5 +1,7 @@
 class RoutesController < ApplicationController
   def find
+    cache(:forever) if time_requested?
+    
     begin
       route = Trafikanten::Route.new(params[:from_id], params[:to_id], get_time)
       route.parse
@@ -15,13 +17,9 @@ class RoutesController < ApplicationController
       render :text => "No available routes found", :status => :not_found and return
     end
     
-    if time_requested?
-      # Cache forever
-      expires_in 10.years, 'max-stale' => 10.years.to_i, :public => true
-    else
-      # Cache till the first departure
-      max_age = (route.trip[:steps].first[:depart][:time] - Time.zone.now).to_i + 60
-      expires_in max_age, 'max-stale' => max_age, :public => true
+    # Cache till the first departure if not bad request or 404 and time isnt requested
+    unless time_requested?
+      cache(cache_time_for(route.trip))
     end
     
     result = {}
@@ -37,5 +35,23 @@ class RoutesController < ApplicationController
   
   def time_requested?
     !params[:date].blank? && !params[:time].blank?
+  end
+  
+  def cache(age)
+    time = (age == :forever) ? 10.years : age
+    expires_in time.to_i, 'max-stale' => time.to_i, :public => true
+  end
+  
+  def cache_time_for(trip)
+    departs = nil
+    trip[:steps].each do |step|
+      if step[:depart].has_key? :time
+        departs = step[:depart][:time] and break
+      end
+    end
+    
+    if departs
+      return (departs - Time.zone.now).to_i + 60
+    end
   end
 end
