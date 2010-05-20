@@ -5,7 +5,7 @@ require 'cgi'
 module Trafikanten
   class Station
     URL = "http://m.trafikanten.no/BetLink.asp?fra=%s&DStoppAddress=1"
-    #<a href="ToCombo.asp?fra=01351445%3AAker&amp;deptype=1" title="Velg">Aker (Råde)</a><br/>
+
     STATION_REGEX = /<a.+fra=(\d+).*deptype=(\d)".+>(.+)<\/a><br\/>/
     ONE_STATION = /<a.+fra=(\d+).*deptype=(\d)"\/>Neste<\/a>/
     
@@ -18,8 +18,8 @@ module Trafikanten
     end
     
     def self.find_all_by_name(name)
-      name = CGI.escape(name)
-      doc = Iconv.new('UTF-8', 'LATIN1').iconv(open(URL % name).read)
+      doc = search(name)
+
       doc.scan(STATION_REGEX).map do |station|
         s = Station.new
         s.id    = station[0]
@@ -30,8 +30,7 @@ module Trafikanten
     end
     
     def self.find_by_name(name)
-      name = CGI.escape(name)
-      doc = Iconv.new('UTF-8', 'LATIN1').iconv(open(URL % name).read)
+      doc = search(name)
       station = doc.scan(ONE_STATION).first
       
       if station
@@ -60,5 +59,11 @@ module Trafikanten
         nil
       end
     end
+    
+    private
+    def self.search(name)
+      Trafikanten::Utils.fetch(URL % CGI.escape(name))
+    end
+    
   end
 end
