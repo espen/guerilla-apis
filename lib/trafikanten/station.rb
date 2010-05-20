@@ -38,7 +38,7 @@ module Trafikanten
         name = doc.scan(STATION_REGEX).first[2]
         s.name = CGI.unescape(name)
         s.id = station[0]
-        s.type
+        s.type = station[1]
         return s
       end
     end

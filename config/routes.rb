@@ -8,6 +8,14 @@ Trafikanten::Application.routes.draw do |map|
     
       # API version 1
       namespace :v1 do
+        
+        # Stations
+        namespace :stations do
+          # Up to 20 results
+          match '/:name', :to => 'stations#find_all'
+          # 1 result
+          match '/one/:name', :to => 'stations#find'
+        end
 
         # Routes
         namespace :routes do

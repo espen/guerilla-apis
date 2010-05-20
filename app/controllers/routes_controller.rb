@@ -36,12 +36,7 @@ class RoutesController < ApplicationController
   def time_requested?
     !params[:date].blank? && !params[:time].blank?
   end
-  
-  def cache(age)
-    time = (age == :forever) ? 10.years : age
-    expires_in time.to_i, 'max-stale' => time.to_i, :public => true
-  end
-  
+    
   def cache_time_for(trip)
     departs = nil
     trip[:steps].each do |step|
