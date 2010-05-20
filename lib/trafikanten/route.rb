@@ -7,7 +7,7 @@ module Trafikanten
   class Route
     attr_accessor :trip
     BASE_URL = 'http://m.trafikanten.no/BetRes.asp?'
-
+    
     # Regexes for matching steps in the HTML
     WALK    = /Gå\s+fra (.+) til (.+) ca. (\d) minutt/u
     WAIT    = /Vent\s+(\d+) minutt/
@@ -30,35 +30,29 @@ module Trafikanten
     end
 
     def parse
-      # This is pretty brittle error-checking...
-      begin
-        doc = Trafikanten::Utils.fetch(BASE_URL + query_string)
-
-        if doc =~ /Microsoft VBScript runtime/
-          raise BadRequest
-        end
-
-        @trip = do_parse(doc)
-      rescue => e
-        if doc =~ /Ingen forbindelse funnet eller ingen stoppesteder funnet/
-          return {}
-        end
-
-        if doc =~ /Trafikanten - Feilmelding/
-          doc =~ /<p>(.+)<\/p>/
-          raise Error.new($1)
-        end
-
-        # Oops.
-        raise e
+      doc = Trafikanten::Utils.fetch(BASE_URL + query_string)
+      
+      if doc =~ /Trafikanten - Feilmelding/
+        doc =~ /<p>(.+)<\/p>/
+        raise Error.new($1)
       end
+      
+      if doc =~ /Microsoft VBScript runtime/
+        raise BadRequest
+      end
+      
+      if doc =~ /Ingen forbindelse funnet eller ingen stoppesteder funnet/
+        return {}
+      end
+      
+      @trip = do_parse(doc)
     end
     
     private
     
-    def do_parse(doc)
+    def do_parse(raw)
       trip = {}
-      doc = Nokogiri::HTML.parse(doc)
+      doc = Nokogiri::HTML.parse(raw)
       
       trip[:steps] = doc.css('p')[1..-1].inject([]) do |ary, step|
         # Clean the text
@@ -79,9 +73,10 @@ module Trafikanten
       trip[:duration] = trip[:steps].inject(0) do |i, step|
         i += step[:duration] if step[:duration]
       end
-      
+
       trip
     end
+
     
     def parse_step(step)
       parsed = {}

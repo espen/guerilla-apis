@@ -1,5 +1,4 @@
 class RoutesController < ApplicationController
-  # TODO: Cache this hit and expire it at the time of departure in the first step!
   def find
     begin
       route = Trafikanten::Route.new(params[:from_id], params[:to_id], get_time)
@@ -33,11 +32,7 @@ class RoutesController < ApplicationController
   
   private
   def get_time
-    if time_requested?
-      Time.zone.parse params[:date] + ' ' + params[:time]
-    else
-      Time.zone.now
-    end
+    time_requested? ? (Time.zone.parse params[:date] + ' ' + params[:time]) : Time.zone.now
   end
   
   def time_requested?
