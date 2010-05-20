@@ -1,7 +1,5 @@
 class RoutesController < ApplicationController
   def find
-    cache(:forever) if time_requested?
-    
     begin
       route = Trafikanten::Route.new(params[:from_id], params[:to_id], get_time)
       route.parse
@@ -12,6 +10,8 @@ class RoutesController < ApplicationController
         raise e
       end
     end
+
+    cache :forever if time_requested?
     
     if route.trip.empty?
       render :text => "No available routes found", :status => :not_found and return
