@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+require 'open-uri'
 module Trafikanten
   class Error < StandardError;end
   class BadRequest < Error;end
