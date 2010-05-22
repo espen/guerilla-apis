@@ -9,13 +9,16 @@ class StationsController < ApplicationController
     result = result_hash_for('trafikanten.no')
     
     result[:stations] = stations.inject([]) do |arr, station|
-      arr << {
-        :name => station.name, 
-        :id => station.id,
-        :geo => {
+      if station.lng && station.lat
+        geo = {
           'type' => 'Point',
           'coordinates' => [station.lng, station.lat]
         }
+      end
+      arr << {
+        :name => station.name, 
+        :id => station.id,
+        :geo => geo
       }
     end
     
