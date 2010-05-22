@@ -11,12 +11,9 @@ Trafikanten::Application.routes.draw do |map|
         
         # Stations
         namespace :stations do
-          # Up to 20 results
-          match '/:name', :to => 'stations#find_all'
-          # 1 result
-          match '/one/:name', :to => 'stations#find'
+          match '/:name', :to => 'stations#find'
         end
-
+        
         # Routes
         namespace :routes do
           match '/:from_id/:to_id(/:date/:time)', :to => 'routes#find',
