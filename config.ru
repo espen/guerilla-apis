@@ -1,6 +1,21 @@
-# This file is used by Rack-based servers to start the application.
-require 'rack/throttle'
-use Rack::Throttle::Interval, :min => 3.0
+#\ -w -p 8765
+require 'guerilla_api'
 
-require ::File.expand_path('../config/environment',  __FILE__)
-run Trafikanten::Application
+# Middleware stack shared by all apps
+use Rack::Head
+use Rack::ContentType
+use Rack::ContentLength
+use Rack::ETag
+use Rack::Runtime
+
+# The APIs
+map '/api' do
+  # Trafikanten
+  map '/trafikanten' do
+    map '/v1' do
+      run GuerillaAPI::Apps::Trafikanten::V1.new
+    end
+    
+  end
+  
+end
