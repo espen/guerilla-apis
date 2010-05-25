@@ -10,9 +10,14 @@ use Rack::Runtime
 
 # The APIs
 map '/api' do
-  use Rack::JSONP
+  
   # Trafikanten
   map '/trafikanten' do
+    
+    # Supports JSONP
+    use Rack::JSONP
+    
+    # Version 1
     map '/v1' do
       run GuerillaAPI::Apps::Trafikanten::V1.new
     end
