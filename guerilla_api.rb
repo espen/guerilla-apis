@@ -5,8 +5,12 @@ Bundler.setup
 # Our dependencies
 require 'rack'
 require 'json'
+require 'rack/contrib/jsonp'
 require 'sinatra'
 require 'trafikanten_travel'
+
+# Monkey-patch Rack::JSONP
+require 'lib/rack/jsonp'
 
 module GuerillaAPI
   module Apps
