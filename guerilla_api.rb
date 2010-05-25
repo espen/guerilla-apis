@@ -1,7 +1,12 @@
-require 'sinatra'
-require 'json'
+require "rubygems"
+require "bundler"
+Bundler.setup
 
-require File.expand_path('../vendor/trafikanten-travel/lib/trafikanten_travel', __FILE__)
+# Our dependencies
+require 'rack'
+require 'json'
+require 'sinatra'
+require 'trafikanten_travel'
 
 module GuerillaAPI
   module Apps
