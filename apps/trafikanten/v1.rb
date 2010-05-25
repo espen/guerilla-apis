@@ -16,6 +16,7 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
       route = find_route(params[:from_id], params[:to_id])
     rescue TrafikantenTravel::Error => e
       status 400
+      content_type 'text/plain', :charset => 'utf-8'
       return e.message
     end
     
@@ -40,6 +41,7 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
     begin
       route = find_route(params[:from_id], params[:to_id])
     rescue TrafikantenTravel::Error => e
+      content_type 'text/plain', :charset => 'utf-8'
       status 400
       return e.message
     end

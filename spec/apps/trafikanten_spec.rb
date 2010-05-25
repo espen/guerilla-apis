@@ -98,19 +98,28 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
           last_response.headers['Content-Type'].should == "application/javascript;charset=utf-8"
           last_response.body.should =~ /^func\(/
         end
-
-        it 'returns 400 when an normal error occurred at trafikanten.no' do
-          TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::Error.new('Bad things happened')
-          get '/api/trafikanten/v1/route/1234/1234'
-          last_response.status.should == 400
-          last_response.body.should == 'Bad things happened'          
-        end
         
-        it 'returns 400 when an abnormal error occurred at trafikanten.no' do
-          TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::BadRequest.new('Very bad things happened')
-          get '/api/trafikanten/v1/route/1234/1234'
-          last_response.status.should == 400
-          last_response.body.should == 'Very bad things happened'
+        context 'errors' do
+
+          it 'returns 400 when an normal error occurred at trafikanten.no' do
+            TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::Error.new('Bad things happened')
+            get '/api/trafikanten/v1/route/1234/1234'
+            last_response.status.should == 400
+            last_response.body.should == 'Bad things happened'          
+          end
+
+          it 'returns 400 when an abnormal error occurred at trafikanten.no' do
+            TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::BadRequest.new('Very bad things happened')
+            get '/api/trafikanten/v1/route/1234/1234'
+            last_response.status.should == 400
+            last_response.body.should == 'Very bad things happened'
+          end
+          
+          it 'sets Content-Type to text/plain' do
+            TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::BadRequest.new('Very bad things happened')
+            get '/api/trafikanten/v1/route/1234/1234'
+            last_response.headers['Content-Type'].should =~ /text\/plain/
+          end
         end
         
         context 'no route found' do
@@ -233,19 +242,29 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
           last_response.body.should == ''
         end
         
-        it 'returns 400 when an normal error occurred at trafikanten.no' do
-          TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::Error.new('Bad things happened')
-          get '/api/trafikanten/v1/route/1234/1234/2010-04-29/12:00'
-          last_response.status.should == 400
-          last_response.body.should == 'Bad things happened'          
+        context 'errors' do
+          it 'returns 400 when an normal error occurred at trafikanten.no' do
+            TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::Error.new('Bad things happened')
+            get '/api/trafikanten/v1/route/1234/1234/2010-04-29/12:00'
+            last_response.status.should == 400
+            last_response.body.should == 'Bad things happened'
+          end
+
+          it 'returns 400 when an abnormal error occurred at trafikanten.no' do
+            TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::BadRequest.new('Very bad things happened')
+            get '/api/trafikanten/v1/route/1234/1234/2010-04-29/12:00'
+            last_response.status.should == 400
+            last_response.body.should == 'Very bad things happened'
+            last_response.headers['Content-Type'].should =~ /text\/plain/
+          end
+          
+          it 'sets Content-Type to text/plain' do
+            TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::BadRequest.new('Very bad things happened')
+            get '/api/trafikanten/v1/route/1234/1234/2010-04-29/12:00'
+            last_response.headers['Content-Type'].should =~ /text\/plain/
+          end
         end
         
-        it 'returns 400 when an abnormal error occurred at trafikanten.no' do
-          TrafikantenTravel::Route.stub(:find).and_raise TrafikantenTravel::BadRequest.new('Very bad things happened')
-          get '/api/trafikanten/v1/route/1234/1234/2010-04-29/12:00'
-          last_response.status.should == 400
-          last_response.body.should == 'Very bad things happened'
-        end
         
         it 'returns the correct structure' do
           time_now = Time.now
