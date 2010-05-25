@@ -68,7 +68,9 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
   get '/stations/:name' do
     cache_forever
     stations = TrafikantenTravel::Station.find_by_name params[:name]
-    {:stations => stations.map do |station| 
+    {
+      :source => 'trafikanten.no',
+      :stations => stations.map do |station| 
       has_geo = station.lat && station.lng
       { :name => station.name,
         :id => station.id,
@@ -82,6 +84,7 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
   
   def route_to_json(route)
     {
+      'source' => 'trafikanten.no',
       'route' => {
         'duration' => route.duration,
         'steps' => route.steps.map do |step|
