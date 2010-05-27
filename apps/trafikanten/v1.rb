@@ -11,24 +11,8 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
   #       repeatedly by appending bogus GET params, or different JSONP callbacks.
   get '/route/:from_id/:to_id/:date/:time' do
     cache_forever
-    
-    begin
-      route = find_route(params[:from_id], params[:to_id])
-    rescue TrafikantenTravel::Error => e
-      status 400
-      content_type 'text/plain', :charset => 'utf-8'
-      return e.message
-    end
-    
     time = Time.parse "#{params[:date]} #{params[:time]}"
-    route = find_route(params[:from_id], params[:to_id], time)
-    
-    if route.steps == []
-      status 404
-      return nil
-    end
-    
-    route_to_json(route)
+    find_route_by_date(params[:from_id], params[:to_id], time)    
   end
 
   # Next departure
@@ -38,26 +22,7 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
   #       repeatedly by appending bogus GET params, or different JSONP callbacks.
   get '/route/:from_id/:to_id' do
     # Error happened
-    begin
-      route = find_route(params[:from_id], params[:to_id])
-    rescue TrafikantenTravel::Error => e
-      content_type 'text/plain', :charset => 'utf-8'
-      status 400
-      return e.message
-    end
-    
-    # No route found
-    if route.steps == []
-      cache_forever
-      status 404
-      return nil
-    end
-    
-    time_until_departure = route.steps[0].depart[:time]
-    # Cache intil the next departure. Include the minute for the departure
-    expires ((time_until_departure - Time.now).to_i + 60), :public
-    
-    route_to_json(route)
+    find_route_by_date(params[:from_id], params[:to_id], Time.now)    
   end
 
   # Search for stations
@@ -67,17 +32,7 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
   #       repeatedly by appending bogus GET params, or different JSONP callbacks.
   get '/stations/:name' do
     cache_forever
-    stations = TrafikantenTravel::Station.find_by_name params[:name]
-    {
-      :source => 'trafikanten.no',
-      :stations => stations.map do |station| 
-      has_geo = station.lat && station.lng
-      { :name => station.name,
-        :id => station.id,
-        :geo => has_geo ? {'Type'=>'Point','coordinates'=>[station.lng,station.lat]} : nil
-      }
-      end
-    }.to_json
+    find_stations params[:name]
   end
 
   private
@@ -108,6 +63,45 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
     from  = TrafikantenTravel::Station.new({:id => from})
     to    = TrafikantenTravel::Station.new({:id => to})
     TrafikantenTravel::Route.find(from, to, time)
+  end
+  
+  def find_route_by_date(from, to, time)
+    begin
+      route = find_route(params[:from_id], params[:to_id], time)
+    rescue TrafikantenTravel::Error => e
+      status 400
+      content_type 'text/plain', :charset => 'utf-8'
+      return e.message
+    end
+    
+    if route.steps == []
+      # Pretty sure this lasts forever
+      cache_forever
+      status 404
+      return nil
+    end
+    
+    unless response.headers['Cache-Control']
+      time_until_departure = route.steps[0].depart[:time]
+      # Cache intil the next departure. Include the minute for the departure
+      expires ((time_until_departure - Time.now).to_i + 60), :public
+    end
+    
+    route_to_json(route)
+  end
+  
+  def find_stations(name)
+    stations = TrafikantenTravel::Station.find_by_name(name)
+    {
+      :source => 'trafikanten.no',
+      :stations => stations.map do |station| 
+      has_geo = station.lat && station.lng
+      { :name => station.name,
+        :id => station.id,
+        :geo => has_geo ? {'Type'=>'Point','coordinates'=>[station.lng,station.lat]} : nil
+      }
+      end
+    }.to_json
   end
   
 end
