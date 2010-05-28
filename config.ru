@@ -30,5 +30,5 @@ end
 # period of inactivity. That will eradicate our Varnish cache and make the
 # next request take a long time. This URL is polled from wasitup.com.
 map '/pingu' do
-  run lambda {[200, {}, ['pingu']]}
+  run lambda { |env| [200, {'Content-Type'=>'text/plain'}, StringIO.new("pingu")] }
 end
