@@ -3,10 +3,12 @@ source :gemcutter
 gem 'rack', '1.1.0'
 gem 'json'
 gem 'sinatra', '1.0'
-gem 'rack-contrib'
-gem 'trafikanten-travel', '0.2.1'
+gem 'trafikanten-travel', '0.2.1', :require => 'trafikanten_travel'
+
+# We only need jsonp from rack-contrib
+gem 'rack-contrib', :require => 'rack/contrib/jsonp'
 
 group :test do
   gem 'rspec', '1.3.0'
-  gem 'rack-test'
+  gem 'rack-test', :require => 'rack/test'
 end

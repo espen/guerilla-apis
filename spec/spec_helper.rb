@@ -1,8 +1,9 @@
 require File.expand_path('../../guerilla_api', __FILE__)
 
-require 'rubygems'
-require 'rack'
-require 'rack/test'
+require "rubygems"
+require "bundler"
+Bundler.setup
+Bundler.require(:test)
 
 module RackupApp  
   # Return the app forged by config.ru
