@@ -21,7 +21,6 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
   #       Varnish works on exact URL, so someone could hit our backend
   #       repeatedly by appending bogus GET params, or different JSONP callbacks.
   get '/route/:from_id/:to_id' do
-    # Error happened
     find_route_by_date(params[:from_id], params[:to_id], Time.now)    
   end
 
@@ -69,12 +68,14 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
     begin
       route = find_route(params[:from_id], params[:to_id], time)
     rescue TrafikantenTravel::Error => e
+      # Error happened at Trafikanten
       status 400
       content_type 'text/plain', :charset => 'utf-8'
       return e.message
     end
     
-    if route.steps == []
+    # No route found.
+    if route.steps.size == 0
       # Pretty sure this lasts forever
       cache_forever
       status 404
