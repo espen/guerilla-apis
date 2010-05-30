@@ -12,14 +12,10 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
   #
   # TODO: Cache also in Memcache if more params than required is sent
   #       Varnish works on exact URL, so someone could hit our backend
-  #       repeatedly by appending bogus GET params, or different JSONP callbacks.  
-  get %r{/route/(\d+)/(\d+)(/\d{4}-\d{2}-\d{2}/\d{2}:\d{2})?} do |from, to, datetime|
-    if datetime
-      cache_forever
-      time = Time.parse(datetime)
-    else
-      time = Time.now
-    end
+  #       repeatedly by appending bogus GET params, or different JSONP callbacks.
+ get %r{/route/(\d+)/(\d+)(/\d{4}-\d{2}-\d{2}/\d{2}:\d{2})?} do |from, to, datetime|
+    cache_forever if datetime
+    time = datetime ? Time.parse(datetime) : Time.now
 
     find_route_by_date(from, to, time)
   end
@@ -66,7 +62,7 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
   
   def find_route_by_date(from, to, time)
     begin
-      route = find_route(params[:from_id], params[:to_id], time)
+      route = find_route(from, to, time)
     rescue TrafikantenTravel::Error => e
       # Error happened at Trafikanten
       status 400
