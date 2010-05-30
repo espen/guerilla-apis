@@ -202,7 +202,11 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
           # First step
           step = route['steps'][0]
           step['depart']['station'].should == 'Startstasjon 0'
+          step['depart']['time'].should == @time.iso8601
+          
           step['arrive']['station'].should == 'Stopstasjon 0'
+          step['arrive']['time'].should == (@time + step['duration'] * 60).iso8601
+          
           step['type'].should == 'train'
 
           # Last step
@@ -284,7 +288,10 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
           # First step
           step = route['steps'][0]
           step['depart']['station'].should == 'Startstasjon 0'
+          step['depart']['time'].should == @time.iso8601
+          
           step['arrive']['station'].should == 'Stopstasjon 0'
+          step['arrive']['time'].should == (@time + step['duration'] * 60).iso8601
           step['type'].should == 'train'
 
           # Last step

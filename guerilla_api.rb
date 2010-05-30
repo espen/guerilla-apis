@@ -16,3 +16,11 @@ module GuerillaAPI
     autoload :Trafikanten, 'apps/trafikanten'
   end
 end
+
+require 'time'
+
+class Time
+  def to_json(*)
+    self.iso8601.to_json
+  end
+end
