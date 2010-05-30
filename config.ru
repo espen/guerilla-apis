@@ -27,8 +27,9 @@ map '/api' do
 end
 
 # This is a temporary means to keep Heroku from killing our dyno after a
-# period of inactivity. That will eradicate our Varnish cache and make the
-# next request take a long time. This URL is polled from wasitup.com.
+# period of inactivity, which will eradicate our Varnish cache and make the
+# next request take a long time while the dyno reboots. This URL is polled
+# from wasitup.com.
 map '/pingu' do
-  run lambda {[200, {}, 'pingu']}
+  run proc {[200, {}, ['pingu']]}
 end
