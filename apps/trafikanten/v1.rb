@@ -3,27 +3,27 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
   before do
     content_type 'application/json', :charset => 'utf-8'
   end
-  
-  # Specific departure
-  #
-  # TODO: Cache also in Memcache if more params than required is sent
-  #       Varnish works on exact URL, so someone could hit our backend
-  #       repeatedly by appending bogus GET params, or different JSONP callbacks.
-  get '/route/:from_id/:to_id/:date/:time' do
-    cache_forever
-    time = Time.parse "#{params[:date]} #{params[:time]}"
-    find_route_by_date(params[:from_id], params[:to_id], time)    
-  end
 
   # Next departure
+  #   /route/123/123
+  #
+  # Specific departure
+  #   /route/123/123/2010-04-29/12:00
   #
   # TODO: Cache also in Memcache if more params than required is sent
   #       Varnish works on exact URL, so someone could hit our backend
-  #       repeatedly by appending bogus GET params, or different JSONP callbacks.
-  get '/route/:from_id/:to_id' do
-    find_route_by_date(params[:from_id], params[:to_id], Time.now)    
-  end
+  #       repeatedly by appending bogus GET params, or different JSONP callbacks.  
+  get %r{/route/(\d+)/(\d+)(/\d{4}-\d{2}-\d{2}/\d{2}:\d{2})?} do |from, to, datetime|
+    if datetime
+      cache_forever
+      time = Time.parse(datetime)
+    else
+      time = Time.now
+    end
 
+    find_route_by_date(from, to, time)
+  end
+  
   # Search for stations
   #
   # TODO: Cache also in Memcache if more params than :name is sent

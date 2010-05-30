@@ -13,7 +13,33 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
       :type => 1
     })
     
-    @mock_route = TrafikantenTravel::Route.new(@mock_station, @mock_station)
+    @time = Time.now
+    Time.stub(:now).and_return @time
+    
+    @mock_route = TrafikantenTravel::Route.new(TrafikantenTravel::Station.new, TrafikantenTravel::Station.new, @time)
+    
+    duration = 0
+    4.times do |s|
+      step = TrafikantenTravel::Route::Step.new
+      step.duration = rand(20) +1 
+      
+      step.depart = {
+        :station => "Startstasjon #{s}",
+        :time => @time + duration * 60
+      }
+      
+      step.arrive = {
+        :station => "Stopstasjon #{s}",
+        :time => @time + step.duration * 60
+      }
+      
+      step.type = :train
+      
+      duration = duration + step.duration
+      @mock_route.steps << step
+    end
+    
+    @mock_route.duration = duration
   end
   
   context 'searching for stations' do
@@ -124,7 +150,9 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
         
         context 'no route found' do
           before(:each) do
-            TrafikantenTravel::Route.stub(:find).and_return @mock_route
+            mock = @mock_route.dup
+            mock.steps = []
+            TrafikantenTravel::Route.stub(:find).and_return mock
             get '/api/trafikanten/v1/route/1234/1234'            
           end
           
@@ -144,61 +172,32 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
 
         it 'caches until the next departure' do
           mocked = @mock_route.dup
-          time_now = Time.now
-          Time.stub(:now).and_return time_now
           
           step = TrafikantenTravel::Route::Step.new
           step.type = :wait
+          mocked.steps = []
           mocked.steps << step
           
           step = TrafikantenTravel::Route::Step.new
           step.depart = {
             :station => 'Tullestasjonen',
-            :time => time_now + 120 # In 2 minutes
+            :time => @time + 120 # In 2 minutes
           }
           mocked.steps << step
           TrafikantenTravel::Route.stub(:find).and_return mocked
           
           get '/api/trafikanten/v1/route/1234/1234'
-          last_response.headers['Cache-Control'].should == "public, max-age=180"
+          last_response.headers['Cache-Control'].should == "public, max-age=179"
         end
         
         it 'returns the correct structure' do
-          time_now = Time.now
-          Time.stub(:now).and_return time_now
-          
-          fully_mocked = TrafikantenTravel::Route.new(TrafikantenTravel::Station.new, TrafikantenTravel::Station.new, time_now)
-          
-          duration = 0
-          4.times do |s|
-            step = TrafikantenTravel::Route::Step.new
-            step.duration = rand(20) +1 
-            
-            step.depart = {
-              :station => "Startstasjon #{s}",
-              :time => time_now + duration * 60
-            }
-            
-            step.arrive = {
-              :station => "Stopstasjon #{s}",
-              :time => time_now + step.duration * 60
-            }
-            
-            step.type = :train
-            
-            duration = duration + step.duration
-            fully_mocked.steps << step
-          end
-          
-          fully_mocked.duration = duration
-
-          TrafikantenTravel::Route.stub(:find).and_return fully_mocked
+          TrafikantenTravel::Route.stub(:find).and_return @mock_route
           get '/api/trafikanten/v1/route/12345/12345'
           result = JSON.parse(last_response.body)
           
           # Full duration
           route = result['route']
-          route['duration'].should == duration
+          route['duration'].should == @mock_route.duration
           
           # First step
           step = route['steps'][0]
@@ -236,11 +235,14 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
         it 'caches forever' do
           TrafikantenTravel::Route.stub(:find).and_return @mock_route
           get '/api/trafikanten/v1/route/1234/1234/2010-04-29/12:00'
+
           last_response.headers['Cache-Control'].should == "public, max-age=30000000"
         end
 
         it 'returns 404 when no route was found' do
-          TrafikantenTravel::Route.stub(:find).and_return @mock_route
+          mock = @mock_route.dup
+          mock.steps = []
+          TrafikantenTravel::Route.stub(:find).and_return mock
           get '/api/trafikanten/v1/route/1234/1234/2010-04-29/12:00'
           last_response.status.should == 404
           last_response.body.should == ''
@@ -271,41 +273,13 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
         
         
         it 'returns the correct structure' do
-          time_now = Time.now
-          Time.stub(:now).and_return time_now
-          
-          fully_mocked = TrafikantenTravel::Route.new(TrafikantenTravel::Station.new, TrafikantenTravel::Station.new, time_now)
-          
-          duration = 0
-          4.times do |s|
-            step = TrafikantenTravel::Route::Step.new
-            step.duration = rand(20) +1 
-            
-            step.depart = {
-              :station => "Startstasjon #{s}",
-              :time => time_now + duration * 60
-            }
-            
-            step.arrive = {
-              :station => "Stopstasjon #{s}",
-              :time => time_now + step.duration * 60
-            }
-            
-            step.type = :train
-            
-            duration = duration + step.duration
-            fully_mocked.steps << step
-          end
-          
-          fully_mocked.duration = duration
-
-          TrafikantenTravel::Route.stub(:find).and_return fully_mocked
+          TrafikantenTravel::Route.stub(:find).and_return @mock_route
           get '/api/trafikanten/v1/route/12345/12345/2010-04-29/12:00'
           result = JSON.parse(last_response.body)
           
           # Full duration
           route = result['route']
-          route['duration'].should == duration
+          route['duration'].should == @mock_route.duration
           
           # First step
           step = route['steps'][0]
