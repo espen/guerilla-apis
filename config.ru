@@ -31,5 +31,5 @@ end
 # next request take a long time while the dyno reboots. This URL is polled
 # from wasitup.com.
 map '/pingu' do
-  run proc {[200, {}, ['pingu']]}
+  run proc { [200, {}, StringIO.new("pingu")] }
 end
