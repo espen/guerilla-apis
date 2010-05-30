@@ -81,10 +81,14 @@ class GuerillaAPI::Apps::Trafikanten::V1 < Sinatra::Base
       return nil
     end
     
+    # Cache intil the next departure. Include the minute for the departure
     unless response.headers['Cache-Control']
-      time_until_departure = route.steps[0].depart[:time]
-      # Cache intil the next departure. Include the minute for the departure
-      expires ((time_until_departure - Time.now).to_i + 60), :public
+       route.steps.each do |step|
+        if step.depart && step.depart[:time]
+          expires ((step.depart[:time] - Time.now).to_i + 60), :public
+          break
+        end
+      end
     end
     
     route_to_json(route)

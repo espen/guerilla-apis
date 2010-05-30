@@ -147,12 +147,16 @@ describe GuerillaAPI::Apps::Trafikanten::V1 do
           time_now = Time.now
           Time.stub(:now).and_return time_now
           
-          first_step = TrafikantenTravel::Route::Step.new
-          first_step.depart = {
+          step = TrafikantenTravel::Route::Step.new
+          step.type = :wait
+          mocked.steps << step
+          
+          step = TrafikantenTravel::Route::Step.new
+          step.depart = {
             :station => 'Tullestasjonen',
             :time => time_now + 120 # In 2 minutes
           }
-          mocked.steps << first_step
+          mocked.steps << step
           TrafikantenTravel::Route.stub(:find).and_return mocked
           
           get '/api/trafikanten/v1/route/1234/1234'
