@@ -6,7 +6,7 @@ gem 'sinatra', '1.0'
 gem 'trafikanten-travel', '0.2.3', :require => 'trafikanten_travel'
 
 # We only need jsonp from rack-contrib
-gem 'rack-contrib', :require => 'rack/contrib/jsonp'
+gem 'rack-contrib', '1.0.1', :require => 'rack/contrib/jsonp'
 
 group :test do
   gem 'rspec', '1.3.0'
