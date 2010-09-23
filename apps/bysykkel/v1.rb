@@ -28,7 +28,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
   def find_racks()
     racks = BysykkelTravel::Rack.all()
     {
-      :source => 'trafikanten.no',
+      :source => 'smartbikeportal.clearchannel.no',
       :racks => racks.map do |rack| 
       {
         'id' => rack.id,
@@ -46,9 +46,9 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
   def find_rack(id)
     rack = BysykkelTravel::Rack.find_by_id(id)
     {
-      :source => 'trafikanten.no',
+      :source => 'smartbikeportal.clearchannel.no',
       :racks => {
-        'id' => rack[:id],
+        'id' => rack.id,
         'ready_bikes' => rack.ready_bikes,
         'empty_locks' => rack.empty_locks,
         'online' => rack.online,
