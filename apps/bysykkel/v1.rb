@@ -36,8 +36,8 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
         'empty_locks' => rack.empty_locks,
         'online' => rack.online,
         'description' => rack.description,
-        'latitude' => rack.latitude,
-        'longitude' => rack.longitude
+        'lat' => rack.lat,
+        'lng' => rack.lng
       }
       end
     }.to_json
@@ -53,8 +53,8 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
         'empty_locks' => rack.empty_locks,
         'online' => rack.online,
         'description' => rack.description,
-        'latitude' => rack.latitude,
-        'longitude' => rack.longitude
+        'lat' => rack.lat,
+        'lng' => rack.lng
       }
     }.to_json
   end
