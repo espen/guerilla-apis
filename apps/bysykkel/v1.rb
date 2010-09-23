@@ -48,7 +48,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
     {
       :source => 'trafikanten.no',
       :racks => {
-        'id' => rack.id,
+        'id' => rack[:id],
         'ready_bikes' => rack.ready_bikes,
         'empty_locks' => rack.empty_locks,
         'online' => rack.online,
