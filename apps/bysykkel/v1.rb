@@ -31,6 +31,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
       :source => 'trafikanten.no',
       :racks => racks.map do |rack| 
       {
+        'id' => rack.id,
         'ready_bikes' => rack.ready_bikes,
         'empty_locks' => rack.empty_locks,
         'online' => rack.online,
@@ -43,11 +44,11 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
   end
 
   def find_rack(id)
-    racks = BysykkelTravel::Rack.find_by_id(id)
+    rack = BysykkelTravel::Rack.find_by_id(id)
     {
       :source => 'trafikanten.no',
-      :racks => racks.map do |rack| 
-      {
+      :racks => {
+        'id' => rack.id,
         'ready_bikes' => rack.ready_bikes,
         'empty_locks' => rack.empty_locks,
         'online' => rack.online,
@@ -55,7 +56,6 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
         'latitude' => rack.latitude,
         'longitude' => rack.longitude
       }
-      end
     }.to_json
   end
   
