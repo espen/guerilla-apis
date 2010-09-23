@@ -23,6 +23,20 @@ map '/api' do
     end
     
   end
+
+  # Bysykkel
+  map '/bysykkel' do
+    
+    # Supports JSONP
+    use Rack::JSONP
+    
+    # Version 1
+    map '/v1' do
+      run GuerillaAPI::Apps::Bysykkel::V1.new
+    end
+    
+  end
+
   
 end
 

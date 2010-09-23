@@ -1,0 +1,29 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    geoutm (0.0.4)
+    json (1.4.6)
+    nokogiri (1.4.3.1)
+    rack (1.1.0)
+    rack-contrib (1.0.1)
+      rack (>= 0.9.1)
+    rack-test (0.5.5)
+      rack (>= 1.0)
+    rspec (1.3.0)
+    sinatra (1.0)
+      rack (>= 1.0)
+    trafikanten-travel (0.2.4)
+      geoutm (>= 0.0.4)
+      nokogiri (>= 1.4.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  json
+  rack (= 1.1.0)
+  rack-contrib (= 1.0.1)
+  rack-test
+  rspec (= 1.3.0)
+  sinatra (= 1.0)
+  trafikanten-travel (= 0.2.4)
