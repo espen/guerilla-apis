@@ -1,7 +1,7 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    bysykkel (0.3.2)
+    bysykkel (0.3.3)
       nokogiri (>= 1.4.1)
       typhoeus (>= 0.1.31)
     geoutm (0.0.4)
@@ -25,7 +25,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bysykkel (= 0.3.2)
+  bysykkel (= 0.3.3)
   json
   rack (= 1.1.0)
   rack-contrib (= 1.0.1)
