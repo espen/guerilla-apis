@@ -14,7 +14,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
     find_station params[:id]
   end
 
-  get '/station/' do
+  get '/stations/' do
     cache_forever
     all_stations
   end
@@ -44,8 +44,8 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
   end
 
   def find_station(id)
-    has_geo = station.lat && station.lng
     station = Bysykkel::Station.find(id)
+    has_geo = station.lat && station.lng
     {
       :source => 'smartbikeportal.clearchannel.no',
       :stations => {
