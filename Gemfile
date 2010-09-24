@@ -2,7 +2,7 @@ source :gemcutter
 
 gem 'rack', '1.1.0'
 gem 'json'
-gem 'sinatra', '1.0'
+gem 'sinatra'
 gem 'trafikanten-travel', '0.2.4', :require => 'trafikanten_travel'
 gem 'bysykkel', '0.3.0', :require => 'bysykkel'
 
