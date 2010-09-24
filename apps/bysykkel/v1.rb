@@ -30,6 +30,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
     {
       :source => 'smartbikeportal.clearchannel.no',
       :stations => stations.map do |station| 
+        has_geo = station.lat && station.lng
       {
         'id' => station.id,
         'ready_bikes' => station.ready_bikes,
@@ -43,10 +44,10 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
   end
 
   def find_station(id)
+    has_geo = station.lat && station.lng
     station = Bysykkel::Station.find(id)
     {
       :source => 'smartbikeportal.clearchannel.no',
-      has_geo = station.lat && station.lng
       :stations => {
         'id' => station.id,
         'ready_bikes' => station.ready_bikes,
