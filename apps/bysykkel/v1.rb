@@ -37,7 +37,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
         'empty_locks' => station.empty_locks,
         'online' => station.online,
         'name' => station.name,
-        'geo' => has_geo ? {'Type'=>'Point','coordinates'=>[station.lng,station.lat]} : nil
+        'geo' => has_geo ? {'type'=>'Point','coordinates'=>[station.lng,station.lat]} : nil
       }
       end
     }.to_json
@@ -54,7 +54,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
         'empty_locks' => station.empty_locks,
         'online' => station.online,
         'name' => station.name,
-        'geo' => has_geo ? {'Type'=>'Point','coordinates'=>[station.lng,station.lat]} : nil
+        'geo' => has_geo ? {'type'=>'Point','coordinates'=>[station.lng,station.lat]} : nil
       }
     }.to_json
   end
