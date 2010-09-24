@@ -9,14 +9,14 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
   # TODO: Cache also in Memcache if more params than :name is sent
   #       Varnish works on exact URL, so someone could hit our backend
   #       repeatedly by appending bogus GET params, or different JSONP callbacks.
-  get '/racks/:id' do
+  get '/stations/:id' do
     cache_forever
-    find_rack params[:id]
+    find_station params[:id]
   end
 
-  get '/racks/' do
+  get '/stations/' do
     cache_forever
-    find_racks
+    all_stations
   end
 
   private
@@ -25,36 +25,19 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
     expires 30000000, :public
   end
   
-  def find_racks()
-    racks = BysykkelTravel::Rack.all()
+  def all_stations()
+    stations = Bysykkel::Station.all()
     {
       :source => 'smartbikeportal.clearchannel.no',
-      :racks => racks.map do |rack| 
-      {
-        'id' => rack.id,
-        'ready_bikes' => rack.ready_bikes,
-        'empty_locks' => rack.empty_locks,
-        'online' => rack.online,
-        'description' => rack.description,
-        'lat' => rack.lat,
-        'lng' => rack.lng
-      }
-      end
+      :stations => stations
     }.to_json
   end
 
-  def find_rack(id)
-    rack = BysykkelTravel::Rack.find_by_id(id)
+  def find_station(id)
+    station = Bysykkel::Station.find_by_id(id)
     {
       :source => 'smartbikeportal.clearchannel.no',
-      :racks => {
-        'id' => rack.id,
-        'ready_bikes' => rack.ready_bikes,
-        'empty_locks' => rack.empty_locks,
-        'online' => rack.online,
-        'description' => rack.description,
-        'lat' => rack.lat,
-        'lng' => rack.lng
+      :stations => station
       }
     }.to_json
   end
