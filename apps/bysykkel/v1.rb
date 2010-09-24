@@ -53,7 +53,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
         'ready_bikes' => station.ready_bikes,
         'empty_locks' => station.empty_locks,
         'online' => station.online,
-        'description' => station.description,
+        'name' => station.name,
         'geo' => has_geo ? {'Type'=>'Point','coordinates'=>[station.lng,station.lat]} : nil
       }
     }.to_json
