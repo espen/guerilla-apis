@@ -4,20 +4,21 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
     content_type 'application/json', :charset => 'utf-8'
   end
 
-  # Search for stations
+  # Search for racks
   #
-  # TODO: Cache also in Memcache if more params than :name is sent
+  # TODO: Cache also in Memcache if more params than :id is sent
   #       Varnish works on exact URL, so someone could hit our backend
   #       repeatedly by appending bogus GET params, or different JSONP callbacks.
-  get '/station/:id' do
+  get '/racks/' do
     cache_forever
-    find_station params[:id]
+    all_racks
   end
 
-  get '/stations/' do
+  get '/racks/:id' do
     cache_forever
-    all_stations
+    find_rack params[:id]
   end
+
 
   private
   
@@ -25,36 +26,36 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
     expires 30000000, :public
   end
   
-  def all_stations()
-    stations = Bysykkel::Station.all()
+  def all_racks()
+    racks = Bysykkel::Rack.all()
     {
       :source => 'smartbikeportal.clearchannel.no',
-      :stations => stations.map do |station| 
-        has_geo = station.lat && station.lng
+      :racks => racks.map do |rack| 
+        has_geo = rack.lat && rack.lng
       {
-        'id' => station.id,
-        'ready_bikes' => station.ready_bikes,
-        'empty_locks' => station.empty_locks,
-        'online' => station.online,
-        'name' => station.name,
-        'geo' => has_geo ? {'type'=>'Point','coordinates'=>[station.lng,station.lat]} : nil
+        'id' => rack.id,
+        'ready_bikes' => rack.ready_bikes,
+        'empty_locks' => rack.empty_locks,
+        'online' => rack.online,
+        'name' => rack.name,
+        'geo' => has_geo ? {'type'=>'Point','coordinates'=>[rack.lng,rack.lat]} : nil
       }
       end
     }.to_json
   end
 
-  def find_station(id)
-    station = Bysykkel::Station.find(id)
-    has_geo = station.lat && station.lng
+  def find_rack(id)
+    rack = Bysykkel::Rack.find(id)
+    has_geo = rack.lat && rack.lng
     {
       :source => 'smartbikeportal.clearchannel.no',
-      :stations => {
-        'id' => station.id,
-        'ready_bikes' => station.ready_bikes,
-        'empty_locks' => station.empty_locks,
-        'online' => station.online,
-        'name' => station.name,
-        'geo' => has_geo ? {'type'=>'Point','coordinates'=>[station.lng,station.lat]} : nil
+      :racks => {
+        'id' => rack.id,
+        'ready_bikes' => rack.ready_bikes,
+        'empty_locks' => rack.empty_locks,
+        'online' => rack.online,
+        'name' => rack.name,
+        'geo' => has_geo ? {'type'=>'Point','coordinates'=>[rack.lng,rack.lat]} : nil
       }
     }.to_json
   end
