@@ -11,12 +11,9 @@ describe GuerillaAPI::Apps::Bysykkel::V1 do
       :id => 1,
       :empty_locks => 4,
       :ready_bikes => 5,
-      :lat => 123,
-      :lng => 456
+      :lat => '123',
+      :lng => '456'
     })
-    
-    @time = Time.now
-    Time.stub(:now).and_return @time
   end
   
   context 'searching for racks' do
@@ -31,40 +28,44 @@ describe GuerillaAPI::Apps::Bysykkel::V1 do
         last_response.headers['Content-Type'].should == "application/json;charset=utf-8"
       end
       
+      
       it 'delivers JSONP when requested' do
         get '/api/bysykkel/v1/racks/1?callback=func'
         last_response.headers['Content-Type'].should == "application/javascript;charset=utf-8"
         last_response.body.should =~ /^func\(/
       end
-
+      
       it 'looks up racks by id and returns array of racks' do
-        Bysykkel::Rack.stub(:find).and_return [@mock_rack]
-        get '/api/bysykkel/v1/racks/1'
-        result = JSON.parse(last_response.body)
-        result['racks'].class.should == Array
-        
-        # Test the first returned rack
-        rack = result['racks'].first
-        rack['name'].should == 'Slottet'
-        rack['id'].should == 1
-        rack['geo'].should == {
-          'Type' => 'Point',
-          'coordinates' => ['456', '123']
-        }
-      end
+          Bysykkel::Rack.stub(:find).and_return [@mock_rack]
+          get '/api/bysykkel/v1/racks/1'
+          result = JSON.parse(last_response.body)
+          result['racks'].class.should == Array
+
+          # Test the first returned rack
+          rack = result['racks'].first
+          rack['name'].should == 'Slottet'
+          rack['id'].should == 1
+          rack['geo'].should == {
+            'Type' => 'Point',
+            'coordinates' => ['456', '123']
+          }
+        end
+
+        it 'returns an empty array in the JSON when no racks are found' do
+          Bysykkel::Rack.stub(:find).and_return []
+          get '/api/bysykkel/v1/racks/1337'
+          result = JSON.parse(last_response.body)
+          result['racks'].should == []
+        end
+
+        it 'caches forever' do
+          Bysykkel::Rack.stub(:find).and_return []
+          get '/api/bysykkel/v1/racks/'
+          last_response.headers['Cache-Control'].should == "public, max-age=30000000"
+        end     
       
-      it 'returns an empty array in the JSON when no racks are found' do
-        Bysykkel::Rack.stub(:find).and_return []
-        get '/api/bysykkel/v1/racks/1337'
-        result = JSON.parse(last_response.body)
-        result['racks'].should == []
-      end
-      
-      it 'caches forever' do
-        Bysykkel::Rack.stub(:find).and_return []
-        get '/api/bysykkel/v1/racks/'
-        last_response.headers['Cache-Control'].should == "public, max-age=30000000"
-      end
+
+   
     end    
   end
 end
