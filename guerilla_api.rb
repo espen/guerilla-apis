@@ -10,7 +10,7 @@ Bundler.require(:default)
 
 module GuerillaAPI
   module Apps
-    autoload :Trafikanten, 'apps/trafikanten'
     autoload :Bysykkel, 'apps/bysykkel'
+    autoload :Trafikanten, 'apps/trafikanten'
   end
 end

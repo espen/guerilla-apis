@@ -45,11 +45,12 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
   end
 
   def find_rack(id)
-    rack = Bysykkel::Rack.find(id)
-    has_geo = rack.lat && rack.lng
+    racks = Bysykkel::Rack.find(id)
     {
       :source => 'smartbikeportal.clearchannel.no',
-      :racks => {
+      :racks => racks.map do |rack| 
+      has_geo = rack.lat && rack.lng
+      {
         'id' => rack.id,
         'ready_bikes' => rack.ready_bikes,
         'empty_locks' => rack.empty_locks,
@@ -57,6 +58,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
         'name' => rack.name,
         'geo' => has_geo ? {'type'=>'Point','coordinates'=>[rack.lng,rack.lat]} : nil
       }
+      end
     }.to_json
   end
   

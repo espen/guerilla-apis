@@ -14,6 +14,10 @@ describe GuerillaAPI::Apps::Bysykkel::V1 do
       :lat => '123',
       :lng => '456'
     })
+
+    @time = Time.now
+    Time.stub(:now).and_return @time
+
   end
   
   context 'searching for racks' do
@@ -35,7 +39,7 @@ describe GuerillaAPI::Apps::Bysykkel::V1 do
         last_response.body.should =~ /^func\(/
       end
       
-      it 'looks up racks by id and returns array of racks' do
+      it 'looks up racks by id and returns rack array' do
           Bysykkel::Rack.stub(:find).and_return [@mock_rack]
           get '/api/bysykkel/v1/racks/1'
           result = JSON.parse(last_response.body)
@@ -46,7 +50,7 @@ describe GuerillaAPI::Apps::Bysykkel::V1 do
           rack['name'].should == 'Slottet'
           rack['id'].should == 1
           rack['geo'].should == {
-            'Type' => 'Point',
+            'type' => 'Point',
             'coordinates' => ['456', '123']
           }
         end
