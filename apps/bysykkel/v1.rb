@@ -11,11 +11,12 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
   #       repeatedly by appending bogus GET params, or different JSONP callbacks.
   get '/racks/' do
     cache_forever
+  begin
     racks = CACHE.get('racks')
-    if racks.nil?
-      racks = all_racks(false)
-      CACHE.set('racks', racks)
-    end
+  rescue
+    racks = all_racks(false)
+    CACHE.set('racks', racks)
+  end
     racks
   end
 
