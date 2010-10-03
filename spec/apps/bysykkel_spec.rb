@@ -62,14 +62,86 @@ describe GuerillaAPI::Apps::Bysykkel::V1 do
           result['racks'].should == []
         end
 
-        it 'caches forever' do
+        it 'caches for a minute' do
           Bysykkel::Rack.stub(:find).and_return []
-          get '/api/bysykkel/v1/racks/'
-          last_response.headers['Cache-Control'].should == "public, max-age=30000000"
-        end     
-      
-
+          get '/api/bysykkel/v1/racks/1'
+          last_response.headers['Cache-Control'].should == "public, max-age=60"
+        end
    
     end    
+
+    context '(/racks/)' do
+      before(:all) do
+        Bysykkel::Rack.stub(:all).and_return []
+      end
+      
+      it 'delivers json in utf-8' do
+        get '/api/bysykkel/v1/racks/'
+        last_response.headers['Content-Type'].should == "application/json;charset=utf-8"
+      end
+      
+      
+      it 'delivers JSONP when requested' do
+        get '/api/bysykkel/v1/racks/?callback=func'
+        last_response.headers['Content-Type'].should == "application/javascript;charset=utf-8"
+        last_response.body.should =~ /^func\(/
+      end
+      
+      it 'looks up racks returns rack array' do
+          get '/api/bysykkel/v1/racks/'
+          result = JSON.parse(last_response.body)
+          result['racks'].class.should == Array
+          result['racks'].size.should > 1
+          
+          # Test the first returned rack
+          rack = result['racks'].first
+          rack['online'].should == nil
+        end
+
+        it 'caches forever' do
+          Bysykkel::Rack.stub(:all).and_return []
+          get '/api/bysykkel/v1/racks/'
+          last_response.headers['Cache-Control'].should == "public, max-age=30000000"
+        end
+   
+    end
+
+    context '(/racks/)' do
+      before(:all) do
+        Bysykkel::Rack.stub(:all).and_return []
+      end
+      
+      it 'delivers json in utf-8' do
+        get '/api/bysykkel/v1/racks/'
+        last_response.headers['Content-Type'].should == "application/json;charset=utf-8"
+      end
+      
+      
+      it 'delivers JSONP when requested' do
+        get '/api/bysykkel/v1/racks/?callback=func'
+        last_response.headers['Content-Type'].should == "application/javascript;charset=utf-8"
+        last_response.body.should =~ /^func\(/
+      end
+      
+      it 'looks up racks returns rack array' do
+          get '/api/bysykkel/v1/racks/'
+          result = JSON.parse(last_response.body)
+          result['racks'].class.should == Array
+          result['racks'].size.should > 1
+          
+          # Test the first returned rack
+          rack = result['racks'].first
+          rack['online'].should != nil
+        end
+
+        it 'caches forever' do
+          Bysykkel::Rack.stub(:all).and_return []
+          get '/api/bysykkel/v1/racks/'
+          last_response.headers['Cache-Control'].should == "public, max-age=30000000"
+        end
+   
+    end
+
+
   end
 end

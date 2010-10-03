@@ -8,6 +8,10 @@ Bundler.setup
 # Require all the needed gems
 Bundler.require(:default)
 
+configure do
+  require 'memcached'
+  CACHE = Memcached.new
+end
 module GuerillaAPI
   module Apps
     autoload :Bysykkel, 'apps/bysykkel'
