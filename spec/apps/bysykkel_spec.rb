@@ -131,9 +131,6 @@ describe GuerillaAPI::Apps::Bysykkel::V1 do
           
           # Test the first returned rack
           rack = result['racks'].first
-          puts "online"
-          puts rack.inspect
-          puts rack['online']
           rack['online'].should 
         end
 

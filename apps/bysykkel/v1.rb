@@ -14,7 +14,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
   begin
     racks = CACHE.get('racks')
   rescue
-    racks = all_racks(false)
+    racks = payload(Bysykkel::Rack.all(), false)
     CACHE.set('racks', racks)
   end
     racks
@@ -22,14 +22,13 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
 
   get '/racks/live/' do
     cache_min
-    all_racks
+    payload(Bysykkel::Rack.all())
   end
 
   get '/racks/:id' do
     cache_min
-    find_rack params[:id]
+    payload(Bysykkel::Rack.find(params[:id]))
   end
-
 
   private
   
@@ -41,49 +40,24 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
     expires 60, :public
   end
   
-  def all_racks(showAvailability = true)
-    racks = Bysykkel::Rack.all()
-    {
-      :source => 'smartbikeportal.clearchannel.no',
-      :racks => racks.map do |rack| 
+  def payload(racks, showAvailability = true)
+      {
+        :source => 'smartbikeportal.clearchannel.no',
+        :racks => racks.map do |rack| 
         has_geo = rack.lat && rack.lng
+        rack_json = {
+          'id' => rack.id,
+          'name' => rack.name,
+          'geo' => has_geo ? {'type'=>'Point','coordinates'=>[rack.lng,rack.lat]} : nil
+        }
         if showAvailability
-      {
-        'id' => rack.id,
-        'name' => rack.name,
-        'geo' => has_geo ? {'type'=>'Point','coordinates'=>[rack.lng,rack.lat]} : nil,
-        'ready_bikes' => rack.ready_bikes,
-        'empty_locks' => rack.empty_locks,
-        'online' => rack.online
-      }
-    else
-      {
-        'id' => rack.id,
-        'name' => rack.name,
-        'geo' => has_geo ? {'type'=>'Point','coordinates'=>[rack.lng,rack.lat]} : nil,
-      }
-
-    end
-      end
-    }.to_json
-  end
-
-  def find_rack(id)
-    racks = Bysykkel::Rack.find(id)
-    {
-      :source => 'smartbikeportal.clearchannel.no',
-      :racks => racks.map do |rack| 
-      has_geo = rack.lat && rack.lng
-      {
-        'id' => rack.id,
-        'ready_bikes' => rack.ready_bikes,
-        'empty_locks' => rack.empty_locks,
-        'online' => rack.online,
-        'name' => rack.name,
-        'geo' => has_geo ? {'type'=>'Point','coordinates'=>[rack.lng,rack.lat]} : nil
-      }
-      end
-    }.to_json
+          rack_json[:ready_bikes] = rack.ready_bikes
+          rack_json[:empty_locks] = rack.empty_locks
+          rack_json[:online] = rack.online
+        end
+        rack_json
+        end
+      }.to_json
   end
   
 end
