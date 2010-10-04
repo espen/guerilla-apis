@@ -9,7 +9,6 @@ Bundler.setup
 Bundler.require(:default)
 
 configure do
-  require 'memcached'
   CACHE = Memcached.new
 end
 module GuerillaAPI
