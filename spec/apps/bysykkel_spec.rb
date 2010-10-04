@@ -95,7 +95,7 @@ describe GuerillaAPI::Apps::Bysykkel::V1 do
           
           # Test the first returned rack
           rack = result['racks'].first
-          rack['online'].should == nil
+          rack['online'] != nil
         end
 
         it 'caches forever' do
@@ -106,38 +106,41 @@ describe GuerillaAPI::Apps::Bysykkel::V1 do
    
     end
 
-    context '(/racks/)' do
+    context '(/racks/live)' do
       before(:all) do
         Bysykkel::Rack.stub(:all).and_return []
       end
       
       it 'delivers json in utf-8' do
-        get '/api/bysykkel/v1/racks/'
+        get '/api/bysykkel/v1/racks/live'
         last_response.headers['Content-Type'].should == "application/json;charset=utf-8"
       end
       
       
       it 'delivers JSONP when requested' do
-        get '/api/bysykkel/v1/racks/?callback=func'
+        get '/api/bysykkel/v1/racks/live?callback=func'
         last_response.headers['Content-Type'].should == "application/javascript;charset=utf-8"
         last_response.body.should =~ /^func\(/
       end
       
-      it 'looks up racks returns rack array' do
-          get '/api/bysykkel/v1/racks/'
+      it 'looks up racks returns rack array with live info' do
+          get '/api/bysykkel/v1/racks/live'
           result = JSON.parse(last_response.body)
           result['racks'].class.should == Array
           result['racks'].size.should > 1
           
           # Test the first returned rack
           rack = result['racks'].first
-          rack['online'].should != nil
+          puts "online"
+          puts rack.inspect
+          puts rack['online']
+          rack['online'].should 
         end
 
-        it 'caches forever' do
+        it 'caches for a minute' do
           Bysykkel::Rack.stub(:all).and_return []
-          get '/api/bysykkel/v1/racks/'
-          last_response.headers['Cache-Control'].should == "public, max-age=30000000"
+          get '/api/bysykkel/v1/racks/live'
+          last_response.headers['Cache-Control'].should == "public, max-age=60"
         end
    
     end
