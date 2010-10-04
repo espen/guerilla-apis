@@ -20,7 +20,7 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
     racks
   end
 
-  get '/racks/live' do
+  get '/racks/live/' do
     cache_min
     all_racks
   end
