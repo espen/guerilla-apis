@@ -5,7 +5,7 @@ gem 'json'
 gem 'sinatra'
 gem 'memcached'
 gem 'trafikanten-travel', '0.2.4', :require => 'trafikanten_travel'
-gem 'bysykkel', '0.4.1', :require => 'bysykkel'
+gem 'bysykkel', '0.4.2', :require => 'bysykkel'
 
 # We only need jsonp from rack-contrib
 gem 'rack-contrib', '1.0.1', :require => 'rack/contrib/jsonp'
