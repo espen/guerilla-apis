@@ -1,4 +1,7 @@
 #\ -w -p 8765
+require 'sinatra/base'
+require 'hoptoad_notifier'
+
 require 'guerilla_api'
 
 # Middleware stack shared by all apps
@@ -10,6 +13,8 @@ use Rack::Runtime
 
 # The APIs
 map '/api' do
+
+
   
   # Trafikanten
   map '/trafikanten' do

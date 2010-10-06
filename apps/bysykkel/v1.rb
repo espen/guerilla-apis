@@ -4,6 +4,9 @@ class GuerillaAPI::Apps::Bysykkel::V1 < Sinatra::Base
     content_type 'application/json', :charset => 'utf-8'
   end
 
+  use HoptoadNotifier::Rack
+  enable :raise_errors
+  
   # Search for racks
   #
   # TODO: Cache also in Memcache if more params than :id is sent

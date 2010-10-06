@@ -1,10 +1,13 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    activesupport (3.0.0)
     bysykkel (0.4.2)
       nokogiri (>= 1.4.1)
       typhoeus (>= 0.1.31)
     geoutm (0.0.4)
+    hoptoad_notifier (2.3.8)
+      activesupport
     json (1.4.6)
     memcached (1)
     nokogiri (1.4.3.1)
@@ -27,6 +30,7 @@ PLATFORMS
 
 DEPENDENCIES
   bysykkel (= 0.4.2)
+  hoptoad_notifier
   json
   memcached
   rack (= 1.1.0)

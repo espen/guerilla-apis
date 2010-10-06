@@ -11,6 +11,13 @@ Bundler.require(:default)
 configure do
   CACHE = Memcached.new
 end
+
+
+HoptoadNotifier.configure do |config|
+  config.api_key = 'b1cb78117fb71a6b4bd7cad05422b15b'
+  config.development_lookup = true
+end
+
 module GuerillaAPI
   module Apps
     autoload :Bysykkel, 'apps/bysykkel'
